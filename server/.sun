@@ -1,0 +1,3 @@
++*.cpp
+require ../../Soup/soup
+arg -lShell32
