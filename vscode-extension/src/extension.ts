@@ -1,6 +1,3 @@
-import { getVSCodeDownloadUrl } from '@vscode/test-electron/out/util';
-import { ChildProcess } from 'child_process';
-import { privateEncrypt } from 'crypto';
 import * as path from 'path';
 import { workspace, ExtensionContext, window } from 'vscode';
 import {
@@ -9,8 +6,6 @@ import {
 	StreamInfo,
 } from 'vscode-languageclient/node';
 const net = require('node:net');
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const child_process = require('node:child_process');
 
 let probableServerExecutablePath: string;
 let client: LanguageClient;
