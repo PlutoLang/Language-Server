@@ -39,10 +39,8 @@ Copy the plutolint executable into the server folder.
 
 Inside of the server folder, just run `sun` and you should get a server executable.
 
-## Building the VS Code extension
+## Using the language server
 
-I'm not a big fan of Microsoft and their knockoff Sublime Text, but I do agree with the ideology that sparked the Language Server Protocol.
+In principle you just have to run the server, then tell your LSP client to connect to localhost at port 5007.
 
-The way I personally went ahead and tested this implementation is by dragging the extension folder into VS Code, then pressing F5, and using the spawned VS Code instance to use the extension.
-
-But in principle you just have to run the server, then tell your LSP client to connect to localhost at port 5007.
+This project also includes a VS Code Extension. See Releases for VSIX files.
