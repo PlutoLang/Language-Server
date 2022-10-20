@@ -1,3 +1,5 @@
 +*.cpp
 require ../../Soup/soup
-linker_arg -lShell32
+if windows
+	linker_arg -lShell32
+endif
