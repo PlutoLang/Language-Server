@@ -10,7 +10,7 @@ const net = require('node:net');
 let probableServerExecutablePath: string;
 let client: LanguageClient;
 let socket: any;
-let socketState = 0;
+let showedFailNotify: boolean = false;
 
 function loopEstablishSocket()
 {
@@ -20,8 +20,6 @@ function loopEstablishSocket()
 	});
 	socket.on("connect", function()
 	{
-		socketState = 2;
-
 		let serverOptions = () => {
 			let result: StreamInfo = {
 				writer: socket,
@@ -52,15 +50,12 @@ function loopEstablishSocket()
 	});
 	socket.on("close", function()
 	{
-		if (socketState !== 2)
+		if (!showedFailNotify)
 		{
-			if (socketState === 0)
-			{
-				window.showInformationMessage("[Pluto Language Server] Failed to establish socket to server. If it's not running, you might find the executable at " + probableServerExecutablePath);
-				socketState = 1;
-			}
-			loopEstablishSocket();
+			window.showInformationMessage("[Pluto Language Server] Failed to establish socket to server. If it's not running, you might find the executable at " + probableServerExecutablePath);
+			showedFailNotify = true;
 		}
+		loopEstablishSocket();
 	});
 }
 
@@ -68,7 +63,6 @@ export function activate(context: ExtensionContext)
 {
 	probableServerExecutablePath = context.asAbsolutePath(path.join("server.exe"));
 
-	socketState = 0;
 	loopEstablishSocket();
 }
 
