@@ -9,15 +9,6 @@ The following dependencies should have the same parent folder as this repository
 - [Soup](https://github.com/calamity-inc/Soup)
 - [Pluto](https://github.com/well-in-that-case/Pluto)
 
-Since Pluto is not yet set up for building with Sun, you'll have to create a `Pluto/src/.sun` file with the following contents:
-
-```
-+*.cpp
--lua.cpp
--luac.cpp
-static
-```
-
 ### plutolint
 
 You need to modify Pluto by replacing `luaD_throw` in ldo.cpp with the following function:
