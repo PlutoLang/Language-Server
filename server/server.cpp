@@ -108,14 +108,18 @@ static void lintAndSendResult(Socket& s, int64_t reqid, const std::string& conte
 
 	// Lint
 	auto res = os::execute("plutoc", { "-p", tf.path.string() });
-	if (!res.empty())
+	for (auto str : string::explode<std::string>(res, "\n"))
 	{
-		res = res.substr(0, res.find('\n')); // erase additional lines
-		res = res.substr(res.find(".lua:") + 5); // erase file name
+		if (str.empty() || str.at(0) == ' ')
+		{
+			continue;
+		}
 
-		auto sep = res.find(": ");
-		auto line = std::stoull(res.substr(0, sep)) - 1;
-		auto msg = res.substr(sep + 2);
+		str = str.substr(str.find(".lua:") + 5); // erase file name
+
+		auto sep = str.find(": ");
+		auto line = std::stoull(str.substr(0, sep)) - 1;
+		auto msg = str.substr(sep + 2);
 		items->children.emplace_back(encodeLineDiagnostic(contents, line, msg, ((msg.substr(0, 9) == "warning: ") ? 2 : 1)));
 	}
 
