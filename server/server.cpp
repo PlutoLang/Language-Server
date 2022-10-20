@@ -85,11 +85,12 @@ static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
 	return obj;
 }
 
-[[nodiscard]] static soup::UniquePtr<JsonNode> encodeLineDiagnostic(const std::string& contents, int64_t line, const std::string& message)
+[[nodiscard]] static soup::UniquePtr<JsonNode> encodeLineDiagnostic(const std::string& contents, int64_t line, const std::string& message, int severity = 1)
 {
 	auto obj = soup::make_unique<JsonObject>();
 	obj->add(soup::make_unique<JsonString>("range"), encodeLineRange(contents, line));
 	obj->add("message", message);
+	obj->add("severity", severity);
 	return obj;
 }
 
@@ -114,7 +115,8 @@ static void lintAndSendResult(Socket& s, int64_t reqid, const std::string& conte
 
 		auto sep = res.find(": ");
 		auto line = std::stoull(res.substr(0, sep)) - 1;
-		items->children.emplace_back(encodeLineDiagnostic(contents, line, res.substr(sep + 2)));
+		auto msg = res.substr(sep + 2);
+		items->children.emplace_back(encodeLineDiagnostic(contents, line, msg, ((msg.substr(0, 9) == "warning: ") ? 2 : 1)));
 	}
 
 	JsonObject msg;
