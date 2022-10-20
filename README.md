@@ -9,26 +9,9 @@ The following dependencies should have the same parent folder as this repository
 - [Soup](https://github.com/calamity-inc/Soup)
 - [Pluto](https://github.com/well-in-that-case/Pluto)
 
-### plutolint
-
-You need to modify Pluto by replacing `luaD_throw` in ldo.cpp with the following function:
-
-```C++
-void luaD_throw (lua_State *L, int errcode) {
-  lua_unlock(L);
-  global_State *g = G(L);
-  g->panic(L);
-  exit(0);
-}
-```
-
-Now, inside of the plutolint folder, just run `sun` and you should get the plutolint executable.
-
-### server
-
-Copy the plutolint executable into the server folder.
-
 Inside of the server folder, just run `sun` and you should get a server executable.
+
+However, in order for the server to actually analyse your code, it needs the plutoc executable to be in the same working directory. If you don't have one, run `sun plutoc` in the Pluto/src folder.
 
 ## Using the language server
 

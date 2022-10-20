@@ -106,11 +106,11 @@ static void lintAndSendResult(Socket& s, int64_t reqid, const std::string& conte
 	of.close();
 
 	// Lint
-	auto res = os::execute("plutolint", { tf.path.string() });
+	auto res = os::execute("plutoc", { "-p", tf.path.string() });
 	if (!res.empty())
 	{
 		res = res.substr(0, res.find('\n')); // erase additional lines
-		res = res.substr(res.find("]:") + 2); // erase file name
+		res = res.substr(res.find(".lua:") + 5); // erase file name
 
 		auto sep = res.find(": ");
 		auto line = std::stoull(res.substr(0, sep)) - 1;
