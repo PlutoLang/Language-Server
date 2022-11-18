@@ -15,11 +15,16 @@
 
 using namespace soup;
 
+#define FORCE_PUSH_DIAGNOSTICS false
+
 struct ClientData
 {
 	// Message buffering
 	std::string str{};
 	size_t len = -1;
+
+	// Capabilities
+	bool supports_pull_diagnostics = false;
 
 	// File tracking
 	std::unordered_map<std::string, std::string> files{};
@@ -47,6 +52,15 @@ static void sendWithLen(Socket& s, const std::string& str)
 	msg.append("\r\n\r\n");
 	msg.append(str);
 	s.send(msg);
+}
+
+static void sendRequest(Socket& s, const std::string& method, JsonObject&& params)
+{
+	JsonObject msg;
+	msg.add("jsonrpc", "2.0");
+	msg.add("method", method);
+	msg.add(soup::make_unique<JsonString>("params"), soup::make_unique<JsonObject>(std::move(params)));
+	sendWithLen(s, msg.encode());
 }
 
 static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
@@ -94,7 +108,7 @@ static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
 	return obj;
 }
 
-static void lintAndSendResult(Socket& s, int64_t reqid, const std::string& contents)
+[[nodiscard]] static soup::UniquePtr<JsonArray> lint(const std::string& contents)
 {
 	auto items = soup::make_unique<JsonArray>();
 
@@ -123,9 +137,22 @@ static void lintAndSendResult(Socket& s, int64_t reqid, const std::string& conte
 		items->children.emplace_back(encodeLineDiagnostic(contents, line, msg, ((msg.substr(0, 9) == "warning: ") ? 2 : 1)));
 	}
 
+	return items;
+}
+
+static void lintAndPublish(Socket& s, const std::string& uri, const std::string& contents)
+{
+	JsonObject msg;
+	msg.add("uri", uri);
+	msg.add(soup::make_unique<JsonString>("diagnostics"), lint(contents));
+	sendRequest(s, "textDocument/publishDiagnostics", std::move(msg));
+}
+
+static void lintAndSendResult(Socket& s, int64_t reqid, const std::string& contents)
+{
 	JsonObject msg;
 	msg.add("kind", "full");
-	msg.add(soup::make_unique<JsonString>("items"), std::move(items));
+	msg.add(soup::make_unique<JsonString>("items"), lint(contents));
 	sendResult(s, reqid, std::move(msg));
 }
 
@@ -174,9 +201,17 @@ static void recvLoop(Socket& s)
 
 				if (method == "initialize")
 				{
+#if FORCE_PUSH_DIAGNOSTICS
+					cd.supports_pull_diagnostics = false;
+#else
+					cd.supports_pull_diagnostics = root->asObj().at("params").asObj().at("capabilities").asObj().at("textDocument").asObj().contains("diagnostic");
+#endif
+
 					auto caps = soup::make_unique<JsonObject>();
 					caps->add("textDocumentSync", 1);
+#if !FORCE_PUSH_DIAGNOSTICS
 					caps->add("diagnosticProvider", true);
+#endif
 
 					JsonObject msg;
 					msg.add(soup::make_unique<JsonString>("capabilities"), std::move(caps));
@@ -190,17 +225,35 @@ static void recvLoop(Socket& s)
 					const std::string& uri = root->asObj().at("params").asObj().at("textDocument").asObj().at("uri").asStr().value;
 					const std::string& text = root->asObj().at("params").asObj().at("textDocument").asObj().at("text").asStr().value;
 					//std::cout << uri << " opened: " << text << "\n";
-					cd.updateFileContents(uri, text);
+					if (cd.supports_pull_diagnostics)
+					{
+						cd.updateFileContents(uri, text);
+					}
+					else
+					{
+						lintAndPublish(s, uri, text);
+					}
 				}
 				else if (method == "textDocument/didChange")
 				{
 					const std::string& uri = root->asObj().at("params").asObj().at("textDocument").asObj().at("uri").asStr().value;
 					const std::string& text = root->asObj().at("params").asObj().at("contentChanges").asArr().at(0).asObj().at("text").asStr().value;
 					//std::cout << uri << " changed: " << text << "\n";
-					cd.updateFileContents(uri, text);
+					if (cd.supports_pull_diagnostics)
+					{
+						cd.updateFileContents(uri, text);
+					}
+					else
+					{
+						lintAndPublish(s, uri, text);
+					}
 				}
 				else if (method == "textDocument/diagnostic")
 				{
+					if (!cd.supports_pull_diagnostics)
+					{
+						throw Exception("Client did not indicate support for pull diagnostics but attempted to pull diagnostics");
+					}
 					const std::string& uri = root->asObj().at("params").asObj().at("textDocument").asObj().at("uri").asStr().value;
 					const std::string& contents = cd.files.at(uri);
 					//std::cout << "Diagnostic requested with contents = " << contents << "\n";
