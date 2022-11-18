@@ -17,4 +17,4 @@ However, in order for the server to actually analyse your code, it needs the plu
 
 In principle you just have to run the server, then tell your LSP client to connect to localhost at port 5007.
 
-This project also includes a VS Code Extension. See Releases for VSIX files.
+This project also includes a VS Code Extension. See [Releases](https://github.com/PlutoLang/pluto-language-server/releases) for VSIX files.
