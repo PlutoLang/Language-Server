@@ -259,11 +259,6 @@ static void recvLoop(Socket& s)
 					//std::cout << "Diagnostic requested with contents = " << contents << "\n";
 					lintAndSendResult(s, reqid, contents);
 				}
-				else if (method == "shutdown")
-				{
-					std::cout << "Client requested shutdown, I guess we'll honour this request.\n";
-					exit(0);
-				}
 			}
 		}
 
