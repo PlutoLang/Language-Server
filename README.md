@@ -39,3 +39,7 @@ This project includes a VS Code Extension. See [Releases](https://github.com/Plu
     }
 }
 ```
+
+## Licensing
+
+This project is dedicated to the public domain. However, note that Soup, Lua, and Pluto have more restrictive licensing.
