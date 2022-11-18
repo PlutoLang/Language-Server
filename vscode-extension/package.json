@@ -2,7 +2,7 @@
   "name": "pluto-language-server",
   "displayName": "Pluto Language Server",
   "description": "",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "repository": "https://github.com/PlutoLang/pluto-language-server",
   "engines": {
     "vscode": "^1.69.0"
