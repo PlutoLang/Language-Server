@@ -4,6 +4,7 @@
   "description": "Provides warnings and errors for the Pluto language.",
   "version": "0.3.0",
   "repository": "https://github.com/PlutoLang/pluto-language-server",
+  "publisher": "Calamity, Inc.",
   "engines": {
     "vscode": "^1.69.0"
   },
