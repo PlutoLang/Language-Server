@@ -1,7 +1,7 @@
 {
   "name": "pluto-language-server",
   "displayName": "Pluto Language Server",
-  "description": "",
+  "description": "Provides warnings and errors for the Pluto language.",
   "version": "0.3.0",
   "repository": "https://github.com/PlutoLang/pluto-language-server",
   "engines": {
