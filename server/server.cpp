@@ -108,6 +108,26 @@ static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
 	return obj;
 }
 
+struct PlutoDiagnostic
+{
+	unsigned long long line;
+	std::string msg;
+
+	operator bool() const noexcept
+	{
+		return !msg.empty();
+	}
+
+	void discharge(const std::string& contents, UniquePtr<JsonArray>& items)
+	{
+		if (!msg.empty())
+		{
+			items->children.emplace_back(encodeLineDiagnostic(contents, line, msg, ((msg.substr(0, 9) == "warning: ") ? 2 : 1)));
+			msg.clear();
+		}
+	}
+};
+
 [[nodiscard]] static soup::UniquePtr<JsonArray> lint(const std::string& contents)
 {
 	auto items = soup::make_unique<JsonArray>();
@@ -121,21 +141,48 @@ static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
 	of.close();
 
 	// Lint
+	PlutoDiagnostic diag;
 	auto res = os::execute("plutoc", { "-p", tf.path.string() });
 	for (auto str : string::explode<std::string>(res, "\n"))
 	{
-		if (str.empty() || str.at(0) == ' ')
+		if (str.empty())
 		{
 			continue;
 		}
 
+		if (str.at(0) == ' ') // Diagnostic continues?
+		{
+			if (diag)
+			{
+				if (auto sep = str.find("^ here: "); sep != std::string::npos)
+				{
+					auto here = str.substr(sep + 2);
+					if (here.length() > diag.msg.length()) // Heuristically exclude generic here messages
+					{
+						diag.msg.push_back('\n');
+						diag.msg.append(str.substr(sep + 2));
+					}
+				}
+				else if (auto sep = str.find("+ note: "); sep != std::string::npos)
+				{
+					diag.msg.push_back('\n');
+					diag.msg.append(str.substr(sep + 2));
+				}
+			}
+			continue;
+		}
+
+		// New diagnostic
+
+		diag.discharge(contents, items);
+
 		str = str.substr(str.find(".lua:") + 5); // erase file name
 
 		auto sep = str.find(": ");
-		auto line = std::stoull(str.substr(0, sep)) - 1;
-		auto msg = str.substr(sep + 2);
-		items->children.emplace_back(encodeLineDiagnostic(contents, line, msg, ((msg.substr(0, 9) == "warning: ") ? 2 : 1)));
+		diag.line = std::stoull(str.substr(0, sep)) - 1;
+		diag.msg = str.substr(sep + 2);
 	}
+	diag.discharge(contents, items);
 
 	return items;
 }
