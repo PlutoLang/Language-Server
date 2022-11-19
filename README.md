@@ -1,31 +1,30 @@
 # Pluto Language Server
 
-## Building the language server
-
-This project uses [Sun](https://github.com/calamity-inc/Sun).
-
-The following dependencies should have the same parent folder as this repository:
-
-- [Soup](https://github.com/calamity-inc/Soup)
-- [Pluto](https://github.com/well-in-that-case/Pluto)
-
-Inside of the server folder, just run `sun` and you should get a server executable.
-
-However, in order for the server to actually analyse your code, it needs the plutoc executable to be in the same working directory. If you don't have one, run `sun plutoc` in the Pluto/src folder.
-
 ## Using the language server
 
-In principle you just have to run the server, then tell your LSP client to connect to localhost at port 5007.
+- [VS Code](#vs-code)
+- [Sublime Text](#sublime-text)
+- [Other](#other)
 
 ### VS Code
 
-This project includes a VS Code Extension. See [Releases](https://github.com/PlutoLang/pluto-language-server/releases) for VSIX files.
+Download the .vsix file from [Releases](https://github.com/PlutoLang/pluto-language-server/releases) and drag it into VS Code's Extensions panel.
 
 ### Sublime Text
 
-1. If you don't already have the sublimelsp package installed, open the command palette and run `Package Control: Install Package`, then select `LSP`.
+#### Prerequisites
 
-2. Select `Preferences > Package Settings > LSP > Settings` and either replace or merge the righthand configuration with the following:
+- server
+  - [Prebuilt binaries](https://github.com/PlutoLang/pluto-language-server/releases)
+  - [Compile it yourself](#building-the-language-server)
+- [plutoc](https://plutolang.github.io/docs/Getting%20Started)
+
+#### Steps
+
+1. Ensure you have the server & plutoc executables in the same folder.
+2. Start the server.
+3. If you don't already have the [sublimelsp](https://github.com/sublimelsp/LSP) package installed, open the command palette and run `Package Control: Install Package`, then select `LSP`.
+4. Select `Preferences > Package Settings > LSP > Settings` and either replace or merge the righthand configuration with the following:
 
 ```JSON
 {
@@ -39,6 +38,32 @@ This project includes a VS Code Extension. See [Releases](https://github.com/Plu
     }
 }
 ```
+
+### Other
+
+#### Prerequisites
+
+- server
+  - [Prebuilt binaries](https://github.com/PlutoLang/pluto-language-server/releases)
+  - [Compile it yourself](#building-the-language-server)
+- [plutoc](https://plutolang.github.io/docs/Getting%20Started)
+
+#### Steps
+
+1. Ensure you have the server & plutoc executables in the same folder.
+2. Start the server.
+3. Tell your LSP client to connect to localhost at port 5007.
+
+## Building the language server
+
+This project uses [Sun](https://github.com/calamity-inc/Sun).
+
+The following dependencies should have the same parent folder as this repository:
+
+- [Soup](https://github.com/calamity-inc/Soup)
+- [Pluto](https://github.com/well-in-that-case/Pluto)
+
+Inside of the server folder, just run `sun` and you should get the server executable.
 
 ## Licensing
 
