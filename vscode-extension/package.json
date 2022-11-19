@@ -5,6 +5,7 @@
   "version": "0.3.0",
   "repository": "https://github.com/PlutoLang/pluto-language-server",
   "publisher": "Calamity, Inc.",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.69.0"
   },
