@@ -1,3 +1,4 @@
+name pluto-language-server
 +*.cpp
 require ../../Soup/soup
 if windows
