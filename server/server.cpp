@@ -337,12 +337,12 @@ int main()
 			recvLoop(s);
 		}
 	};
-	if (!serv.bind(5007, &srv))
+	if (!serv.bind(9170, &srv))
 	{
-		std::cerr << "Failed to bind to port 5007" << std::endl;
+		std::cerr << "Failed to bind to port 9170" << std::endl;
 		return 1;
 	}
-	std::cout << "Pluto Language Server is listening on port 5007." << std::endl;
+	std::cout << "Pluto Language Server is listening on port 9170." << std::endl;
 	serv.run();
 	return 0;
 }

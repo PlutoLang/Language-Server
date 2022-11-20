@@ -16,7 +16,7 @@ function loopEstablishSocket()
 {
 	socket = net.connect({
 		host: "127.0.0.1",
-		port: 5007
+		port: 9170
 	});
 	socket.on("connect", function()
 	{

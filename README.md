@@ -32,7 +32,7 @@ Download the .vsix file from [Releases](https://github.com/PlutoLang/pluto-langu
         "pluto-language-server": {
             "enabled": true,
             "selector": "source.lua",
-            "tcp_port": 5007,
+            "tcp_port": 9170,
             "command": ["ping"]
         }
     }
@@ -52,7 +52,7 @@ Download the .vsix file from [Releases](https://github.com/PlutoLang/pluto-langu
 
 1. Ensure you have the server & plutoc executables in the same folder.
 2. Start the server.
-3. Tell your LSP client to connect to localhost at port 5007.
+3. Tell your LSP client to connect to localhost at port 9170.
 
 ## Building the language server
 
