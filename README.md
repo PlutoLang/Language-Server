@@ -1,10 +1,21 @@
 # Pluto Language Server
 
+## Setting up the language server
+
+1. Grab the latest pluto-language-server.exe from [Releases](https://github.com/PlutoLang/pluto-language-server/releases) or [compile it yourself](#building-the-language-server).
+2. Get plutoc either from [Pluto's latest release](https://github.com/PlutoLang/Pluto/releases) or by [compiling Pluto yourself](https://plutolang.github.io/docs/Getting%20Started/#compile-pluto-yourself).
+
+Now you just need to run the server.
+
+*Note that the plutoc executable has to be in the server's working directory for it to properly function.*
+
+**To run the server without a console window**, you can use the [pluto-language-server (no console).vbs](https://raw.githubusercontent.com/PlutoLang/pluto-language-server/senpai/server/pluto-language-server%20(no%20console).vbs) script.
+
+**To run the server at startup**, place a shortcut to either the server executable or "no console" script in `%appdata%\Microsoft\Windows\Start Menu\Programs\Startup`.
+
 ## Using the language server
 
-- [VS Code](#vs-code)
-- [Sublime Text](#sublime-text)
-- [Other](#other)
+Once you've got the server up & running, you'll just have to tell your LSP client to connect to localhost at port 9170.
 
 ### VS Code
 
@@ -12,19 +23,8 @@ Download the .vsix file from [Releases](https://github.com/PlutoLang/pluto-langu
 
 ### Sublime Text
 
-#### Prerequisites
-
-- server
-  - [Prebuilt binaries](https://github.com/PlutoLang/pluto-language-server/releases)
-  - [Compile it yourself](#building-the-language-server)
-- [plutoc](https://plutolang.github.io/docs/Getting%20Started)
-
-#### Steps
-
-1. Ensure you have the server & plutoc executables in the same folder.
-2. Start the server.
-3. If you don't already have the [sublimelsp](https://github.com/sublimelsp/LSP) package installed, open the command palette and run `Package Control: Install Package`, then select `LSP`.
-4. Select `Preferences > Package Settings > LSP > Settings` and either replace or merge the righthand configuration with the following:
+1. If you don't already have the [sublimelsp](https://github.com/sublimelsp/LSP) package installed, open the command palette and run `Package Control: Install Package`, then select `LSP`.
+2. Select `Preferences > Package Settings > LSP > Settings` and either replace or merge the righthand configuration with the following:
 
 ```JSON
 {
@@ -38,21 +38,6 @@ Download the .vsix file from [Releases](https://github.com/PlutoLang/pluto-langu
     }
 }
 ```
-
-### Other
-
-#### Prerequisites
-
-- server
-  - [Prebuilt binaries](https://github.com/PlutoLang/pluto-language-server/releases)
-  - [Compile it yourself](#building-the-language-server)
-- [plutoc](https://plutolang.github.io/docs/Getting%20Started)
-
-#### Steps
-
-1. Ensure you have the server & plutoc executables in the same folder.
-2. Start the server.
-3. Tell your LSP client to connect to localhost at port 9170.
 
 ## Building the language server
 
