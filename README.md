@@ -61,7 +61,7 @@ This project uses [Sun](https://github.com/calamity-inc/Sun).
 The following dependencies should have the same parent folder as this repository:
 
 - [Soup](https://github.com/calamity-inc/Soup)
-- [Pluto](https://github.com/well-in-that-case/Pluto)
+- [Pluto](https://github.com/PlutoLang/Pluto)
 
 Inside of the server folder, just run `sun` and you should get the server executable.
 
