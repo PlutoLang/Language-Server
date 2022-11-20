@@ -63,6 +63,14 @@ static void sendRequest(Socket& s, const std::string& method, JsonObject&& param
 	sendWithLen(s, msg.encode());
 }
 
+static void sendResult(Socket& s, int64_t reqid)
+{
+	JsonObject msg;
+	msg.add("jsonrpc", "2.0");
+	msg.add("id", reqid);
+	sendWithLen(s, msg.encode());
+}
+
 static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
 {
 	JsonObject msg;
@@ -305,6 +313,17 @@ static void recvLoop(Socket& s)
 					const std::string& contents = cd.files.at(uri);
 					//std::cout << "Diagnostic requested with contents = " << contents << "\n";
 					lintAndSendResult(s, reqid, contents);
+				}
+				else if (method == "shutdown")
+				{
+					// The LSP spec requires that we stop accepting requests from the client at this point,
+					// but we only care to go along with a client's shutdown/exit flow, so this is fine.
+					sendResult(s, reqid);
+				}
+				else if (method == "exit")
+				{
+					// Client assumes that it can restart this server, so we're not actually exitting.
+					s.close();
 				}
 			}
 		}
