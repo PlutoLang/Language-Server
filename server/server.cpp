@@ -109,7 +109,7 @@ static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
 
 #define PROVIDE_DIAGNOSTIC_SOURCE_AND_CODE false
 
-[[nodiscard]] static soup::UniquePtr<JsonNode> encodeLineDiagnostic(const std::string& contents, int64_t line, const std::string& message, int severity = 1)
+[[nodiscard]] static soup::UniquePtr<JsonNode> encodeLineDiagnostic(const std::string& contents, int64_t line, const std::string& message, int severity)
 {
 	auto obj = soup::make_unique<JsonObject>();
 	obj->add(soup::make_unique<JsonString>("range"), encodeLineRange(contents, line));
@@ -142,7 +142,13 @@ struct PlutoDiagnostic
 	{
 		if (!msg.empty())
 		{
-			items->children.emplace_back(encodeLineDiagnostic(contents, line, msg, ((msg.substr(0, 9) == "warning: ") ? 2 : 1)));
+			int severity = 1;
+			if (msg.substr(0, 9) == "warning: ")
+			{
+				msg.erase(0, 9);
+				severity = 2;
+			}
+			items->children.emplace_back(encodeLineDiagnostic(contents, line, msg, severity));
 			msg.clear();
 		}
 	}
