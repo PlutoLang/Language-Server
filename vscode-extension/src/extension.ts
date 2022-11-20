@@ -7,7 +7,6 @@ import {
 } from 'vscode-languageclient/node';
 const net = require('node:net');
 
-let probableServerExecutablePath: string;
 let client: LanguageClient;
 let socket: any;
 let showedFailNotify: boolean = false;
@@ -52,7 +51,7 @@ function loopEstablishSocket()
 	{
 		if (!showedFailNotify)
 		{
-			window.showInformationMessage("[Pluto Language Server] Failed to establish socket to server. If it's not running, you might find the executable at " + probableServerExecutablePath);
+			window.showInformationMessage("[Pluto Language Server] Failed to establish socket to server. Make sure it's running!");
 			showedFailNotify = true;
 		}
 		loopEstablishSocket();
@@ -61,8 +60,6 @@ function loopEstablishSocket()
 
 export function activate(context: ExtensionContext)
 {
-	probableServerExecutablePath = context.asAbsolutePath(path.join("server.exe"));
-
 	loopEstablishSocket();
 }
 
