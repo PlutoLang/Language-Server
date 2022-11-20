@@ -107,12 +107,24 @@ static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
 	return obj;
 }
 
+#define PROVIDE_DIAGNOSTIC_SOURCE_AND_CODE false
+
 [[nodiscard]] static soup::UniquePtr<JsonNode> encodeLineDiagnostic(const std::string& contents, int64_t line, const std::string& message, int severity = 1)
 {
 	auto obj = soup::make_unique<JsonObject>();
 	obj->add(soup::make_unique<JsonString>("range"), encodeLineRange(contents, line));
 	obj->add("message", message);
 	obj->add("severity", severity);
+#if PROVIDE_DIAGNOSTIC_SOURCE_AND_CODE
+	obj->add("source", "the-source");
+	obj->add("code", "the-code");
+	if (severity == 1)
+	{
+		auto codeDescription = soup::make_unique<JsonObject>();
+		codeDescription->add("href", "https://plutolang.github.io");
+		obj->add(soup::make_unique<JsonString>("codeDescription"), std::move(codeDescription));
+	}
+#endif
 	return obj;
 }
 
