@@ -2,7 +2,7 @@
   "name": "pluto-language-server",
   "displayName": "Pluto Language Server",
   "description": "Provides warnings and errors for the Pluto language.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "repository": "https://github.com/PlutoLang/pluto-language-server",
   "publisher": "Calamity, Inc.",
   "icon": "icon.png",
