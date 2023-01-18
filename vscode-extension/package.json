@@ -10,7 +10,7 @@
     "vscode": "^1.69.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages"
   ],
   "activationEvents": [
     "onLanguage:plaintext"
