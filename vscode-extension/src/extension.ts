@@ -29,8 +29,10 @@ function loopEstablishSocket()
 
 		// Options to control the language client
 		let clientOptions: LanguageClientOptions = {
-			// Register the server for plain text documents
-			documentSelector: [{ scheme: 'file', language: 'lua' }],
+			documentSelector: [
+				{ scheme: 'file', language: 'lua' },
+				{ scheme: 'file', language: 'pluto' },
+			],
 			synchronize: {
 				fileEvents: workspace.createFileSystemWatcher('**/*.*')
 			}
