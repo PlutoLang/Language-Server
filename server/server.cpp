@@ -11,6 +11,7 @@
 #include <Server.hpp>
 #include <ServerService.hpp>
 #include <Socket.hpp>
+#include <string.hpp>
 #include <Tempfile.hpp>
 
 using namespace soup;
@@ -31,7 +32,7 @@ struct ClientData
 
 	void updateFileContents(const std::string& uri, std::string contents)
 	{
-		string::replace_all(contents, "\r\n", "\n");
+		string::replaceAll(contents, "\r\n", "\n");
 
 		if (auto e = files.find(uri); e != files.end())
 		{
@@ -252,7 +253,7 @@ static void recvLoop(Socket& s)
 				std::cout << s.peer.toString() << " - " << cd.str << std::endl;
 
 				// Decode
-				auto root = json::decodeForDedicatedVariable(cd.str);
+				auto root = json::decode(cd.str);
 				if (!root)
 				{
 					throw Exception("Received invalid JSON data");
