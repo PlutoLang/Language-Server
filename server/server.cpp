@@ -72,13 +72,18 @@ static void sendResult(Socket& s, int64_t reqid)
 	sendWithLen(s, msg.encode());
 }
 
-static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
+static void sendResult(Socket& s, int64_t reqid, UniquePtr<JsonNode>&& result)
 {
 	JsonObject msg;
 	msg.add("jsonrpc", "2.0");
 	msg.add("id", reqid);
-	msg.add(soup::make_unique<JsonString>("result"), soup::make_unique<JsonObject>(std::move(result)));
+	msg.add(soup::make_unique<JsonString>("result"), std::move(result));
 	sendWithLen(s, msg.encode());
+}
+
+static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
+{
+	sendResult(s, reqid, soup::make_unique<JsonObject>(std::move(result)));
 }
 
 // line & character start at 0!
@@ -129,7 +134,19 @@ static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
 	return obj;
 }
 
-struct PlutoDiagnostic
+struct PlutoHint
+{
+	enum Type : uint8_t
+	{
+		DIAGNOSTIC,
+		COMPLETIONS,
+	};
+
+	Type type;
+	soup::UniquePtr<JsonNode> node;
+};
+
+struct PlutoDiagnosticBuffer
 {
 	unsigned long long line;
 	std::string msg;
@@ -139,7 +156,7 @@ struct PlutoDiagnostic
 		return !msg.empty();
 	}
 
-	void discharge(const std::string& contents, UniquePtr<JsonArray>& items)
+	void discharge(const std::string& contents, std::vector<PlutoHint>& hints)
 	{
 		if (!msg.empty())
 		{
@@ -149,15 +166,15 @@ struct PlutoDiagnostic
 				msg.erase(0, 9);
 				severity = 2;
 			}
-			items->children.emplace_back(encodeLineDiagnostic(contents, line, msg, severity));
+			hints.emplace_back(PlutoHint{ PlutoHint::DIAGNOSTIC, encodeLineDiagnostic(contents, line, msg, severity) });
 			msg.clear();
 		}
 	}
 };
 
-[[nodiscard]] static soup::UniquePtr<JsonArray> lint(const std::string& contents)
+[[nodiscard]] static std::vector<PlutoHint> getHints(const std::string& contents)
 {
-	auto items = soup::make_unique<JsonArray>();
+	std::vector<PlutoHint> hints;
 
 	// Create temp file
 	Tempfile tf("lua");
@@ -167,8 +184,8 @@ struct PlutoDiagnostic
 	of << contents;
 	of.close();
 
-	// Lint
-	PlutoDiagnostic diag;
+	// Parse
+	PlutoDiagnosticBuffer buf;
 	auto res = os::execute("plutoc", { "-p", tf.path.string() });
 	for (auto str : string::explode<std::string>(res, "\n"))
 	{
@@ -177,40 +194,72 @@ struct PlutoDiagnostic
 			continue;
 		}
 
-		if (str.at(0) == ' ') // Diagnostic continues?
+		if (str.at(0) == ' ') // Response continues?
 		{
-			if (diag)
+			if (buf)
 			{
 				if (auto sep = str.find("^ here: "); sep != std::string::npos)
 				{
 					auto here = str.substr(sep + 2);
-					if (here.length() > diag.msg.length()) // Heuristically exclude generic here messages
+					if (here.length() > buf.msg.length()) // Heuristically exclude generic here messages
 					{
-						diag.msg.push_back('\n');
-						diag.msg.append(str.substr(sep + 2));
+						buf.msg.push_back('\n');
+						buf.msg.append(str.substr(sep + 2));
 					}
 				}
 				else if (auto sep = str.find("+ note: "); sep != std::string::npos)
 				{
-					diag.msg.push_back('\n');
-					diag.msg.append(str.substr(sep + 2));
+					buf.msg.push_back('\n');
+					buf.msg.append(str.substr(sep + 2));
 				}
 			}
 			continue;
 		}
 
-		// New diagnostic
+		// New response
 
-		diag.discharge(contents, items);
+		buf.discharge(contents, hints);
+
+		if (str.substr(0, 9) == "suggest: ")
+		{
+			auto completions = soup::make_unique<JsonArray>();
+			for (const auto& suggestion : string::explode(str.substr(9), ';'))
+			{
+				SOUP_IF_UNLIKELY (suggestion.substr(0, 6) != "local,")
+				{
+					continue;
+				}
+				auto completion = soup::make_unique<JsonObject>();
+				completion->add("label", suggestion.substr(6));
+				completion->add("kind", 6); // Variable
+				completion->add("detail", "local " + suggestion.substr(6));
+				completions->children.emplace_back(std::move(completion));
+			}
+			hints.emplace_back(PlutoHint{ PlutoHint::COMPLETIONS, std::move(completions) });
+			continue;
+		}
 
 		str = str.substr(str.find(".lua:") + 5); // erase file name
 
 		auto sep = str.find(": ");
-		diag.line = std::stoull(str.substr(0, sep)) - 1;
-		diag.msg = str.substr(sep + 2);
+		buf.line = std::stoull(str.substr(0, sep)) - 1;
+		buf.msg = str.substr(sep + 2);
 	}
-	diag.discharge(contents, items);
+	buf.discharge(contents, hints);
 
+	return hints;
+}
+
+[[nodiscard]] static soup::UniquePtr<JsonArray> lint(const std::string& contents)
+{
+	auto items = soup::make_unique<JsonArray>();
+	for (auto& resp : getHints(contents))
+	{
+		if (resp.type == PlutoHint::DIAGNOSTIC)
+		{
+			items->children.emplace_back(std::move(resp.node));
+		}
+	}
 	return items;
 }
 
@@ -286,6 +335,10 @@ static void recvLoop(Socket& s)
 #if !FORCE_PUSH_DIAGNOSTICS
 					caps->add("diagnosticProvider", true);
 #endif
+					{
+						auto obj = soup::make_unique<JsonObject>();
+						caps->add("completionProvider", std::move(obj));
+					}
 
 					JsonObject msg;
 					msg.add(soup::make_unique<JsonString>("capabilities"), std::move(caps));
@@ -332,6 +385,46 @@ static void recvLoop(Socket& s)
 					const std::string& contents = cd.files.at(uri);
 					//std::cout << "Diagnostic requested with contents = " << contents << "\n";
 					lintAndSendResult(s, reqid, contents);
+				}
+				else if (method == "textDocument/completion")
+				{
+					// "params":{"textDocument":{"uri":"file:///..."},"position":{"line":8,"character":1},"context":{"triggerKind":1}}
+
+					const std::string& uri = root->asObj().at("params").asObj().at("textDocument").asObj().at("uri").asStr().value;
+					const std::string& contents = cd.files.at(uri);
+					const int64_t position_line = root->asObj().at("params").asObj().at("position").asObj().at("line").asInt();
+					const int64_t position_character = root->asObj().at("params").asObj().at("position").asObj().at("character").asInt();
+
+					std::string modconts{};
+					{
+						auto lines = string::explode(contents, '\n');
+						{
+							std::string& line = lines.at(position_line);
+							auto cur = position_character;
+							while (--cur > 0)
+							{
+								if (line.at(cur) == ' ')
+								{
+									++cur;
+									break;
+								}
+							}
+							line.insert(cur, "pluto_suggest ");
+						}
+						modconts = string::join(lines, '\n');
+					}
+
+					//std::cout << modconts;
+
+					auto completions = soup::make_unique<JsonArray>();
+					for (auto& resp : getHints(modconts))
+					{
+						if (resp.type == PlutoHint::COMPLETIONS)
+						{
+							completions = std::move(resp.node);
+						}
+					}
+					sendResult(s, reqid, std::move(completions));
 				}
 				else if (method == "shutdown")
 				{
