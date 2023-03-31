@@ -227,14 +227,25 @@ struct PlutoDiagnosticBuffer
 			auto completions = soup::make_unique<JsonArray>();
 			for (const auto& suggestion : string::explode(str.substr(9), ';'))
 			{
-				SOUP_IF_UNLIKELY (suggestion.substr(0, 6) != "local,")
-				{
-					continue;
-				}
+				auto arr = string::explode(suggestion, ',');
+
 				auto completion = soup::make_unique<JsonObject>();
-				completion->add("label", suggestion.substr(6));
-				completion->add("kind", CompletionItemKind::Variable);
-				completion->add("detail", "local " + suggestion.substr(6));
+				if (arr.at(0) == "local")
+				{
+					completion->add("kind", CompletionItemKind::Variable);
+					completion->add("detail", "local " + arr.at(1));
+				}
+				else if (arr.at(0) == "efunc")
+				{
+					arr.at(1) += "()";
+					completion->add("kind", CompletionItemKind::Function);
+				}
+				else if (arr.at(0) == "eprop")
+				{
+					completion->add("kind", CompletionItemKind::EnumMember);
+					completion->add("detail", arr.at(1) + " = " + arr.at(2));
+				}
+				completion->add("label", arr.at(1));
 				completions->children.emplace_back(std::move(completion));
 			}
 			hints.emplace_back(PlutoHint{ PlutoHint::COMPLETIONS, std::move(completions) });
@@ -339,6 +350,12 @@ static void recvLoop(Socket& s)
 #endif
 					{
 						auto obj = soup::make_unique<JsonObject>();
+						{
+							auto triggerCharacters = soup::make_unique<JsonArray>();
+							triggerCharacters->children.emplace_back(soup::make_unique<JsonString>("."));
+							triggerCharacters->children.emplace_back(soup::make_unique<JsonString>(":"));
+							obj->add("triggerCharacters", std::move(triggerCharacters));
+						}
 						caps->add("completionProvider", std::move(obj));
 					}
 
@@ -403,15 +420,32 @@ static void recvLoop(Socket& s)
 						{
 							std::string& line = lines.at(position_line);
 							auto cur = position_character;
-							while (--cur > 0)
+							bool has_filter = false;
+							while (--cur, true)
 							{
-								if (line.at(cur) == ' ')
+								if (line.at(cur) == ' '
+									|| line.at(cur) == '.'
+									|| line.at(cur) == ':'
+									)
 								{
 									++cur;
 									break;
 								}
+								has_filter = true;
+
+								if (cur == 0)
+								{
+									break;
+								}
 							}
-							line.insert(cur, "pluto_suggest ");
+							if (has_filter)
+							{
+								line.insert(cur, "pluto_suggest_1 ");
+							}
+							else
+							{
+								line.insert(cur, "pluto_suggest_0");
+							}
 						}
 						modconts = string::join(lines, '\n');
 					}
