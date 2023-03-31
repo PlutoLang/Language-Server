@@ -14,6 +14,8 @@
 #include <string.hpp>
 #include <Tempfile.hpp>
 
+#include "lsp.hpp"
+
 using namespace soup;
 
 #define FORCE_PUSH_DIAGNOSTICS false
@@ -231,7 +233,7 @@ struct PlutoDiagnosticBuffer
 				}
 				auto completion = soup::make_unique<JsonObject>();
 				completion->add("label", suggestion.substr(6));
-				completion->add("kind", 6); // Variable
+				completion->add("kind", CompletionItemKind::Variable);
 				completion->add("detail", "local " + suggestion.substr(6));
 				completions->children.emplace_back(std::move(completion));
 			}
