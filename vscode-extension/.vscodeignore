@@ -7,4 +7,3 @@ src/**
 **/.eslintrc.json
 **/*.map
 **/*.ts
-pack-extension.bat
