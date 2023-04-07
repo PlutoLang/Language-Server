@@ -235,6 +235,10 @@ struct PlutoDiagnosticBuffer
 					completion->add("kind", CompletionItemKind::Variable);
 					completion->add("detail", "local " + arr.at(1));
 				}
+				else if (arr.at(0) == "stat")
+				{
+					completion->add("kind", CompletionItemKind::Keyword);
+				}
 				else if (arr.at(0) == "efunc")
 				{
 					arr.at(1) += "()";
