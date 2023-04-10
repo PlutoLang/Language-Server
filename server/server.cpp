@@ -371,7 +371,7 @@ static void recvLoop(Socket& s)
 
 					sendResult(s, reqid, std::move(msg));
 
-					sendWithLen(s, R"({"jsonrpc":"2.0","method":"window/showMessage","params":{"type":0,"message":"[Pluto Language Server] Socket established."}})");
+					//sendWithLen(s, R"({"jsonrpc":"2.0","method":"window/showMessage","params":{"type":0,"message":"[Pluto Language Server] Socket established."}})");
 				}
 				else if (method == "textDocument/didOpen")
 				{
