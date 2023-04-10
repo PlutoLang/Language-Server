@@ -7,6 +7,7 @@
 #include <JsonInt.hpp>
 #include <JsonObject.hpp>
 #include <JsonString.hpp>
+#include <main.hpp>
 #include <os.hpp>
 #include <Server.hpp>
 #include <ServerService.hpp>
@@ -174,6 +175,8 @@ struct PlutoDiagnosticBuffer
 	}
 };
 
+static std::string plutoc_path = "plutoc";
+
 [[nodiscard]] static std::vector<PlutoHint> getHints(const std::string& contents)
 {
 	std::vector<PlutoHint> hints;
@@ -188,7 +191,7 @@ struct PlutoDiagnosticBuffer
 
 	// Parse
 	PlutoDiagnosticBuffer buf;
-	auto res = os::execute("plutoc", { "-p", tf.path.string() });
+	auto res = os::execute(plutoc_path, { "-p", tf.path.string() });
 	for (auto str : string::explode<std::string>(res, "\n"))
 	{
 		if (str.empty())
@@ -484,8 +487,18 @@ static void recvLoop(Socket& s)
 	});
 }
 
-int main()
+int entry(std::vector<std::string>&& args, bool console)
 {
+	if (args.size() > 1)
+	{
+		if (args.at(1) != "--plutoc" || args.size() <= 2)
+		{
+			std::cout << "Arguments: --plutoc [path]" << std::endl;
+			return 2;
+		}
+		plutoc_path = args.at(2);
+	}
+
 	soup::Server serv{};
 	serv.on_work_done = [](soup::Worker& w, soup::Scheduler&)
 	{
@@ -517,3 +530,5 @@ int main()
 	serv.run();
 	return 0;
 }
+
+SOUP_MAIN_CLI(entry);
