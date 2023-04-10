@@ -4,6 +4,8 @@
 
 Download the .vsix file from [Releases](https://github.com/PlutoLang/pluto-language-server/releases) and drag it into VS Code's Extensions panel.
 
+The server & plutoc executables are bundled and the server is automatically started. If that's too Windows-only or magical for you, [version 0.4.0](https://github.com/PlutoLang/pluto-language-server/releases/tag/0.4.0) of the VSIX still works — you just need to manually set up the language server (see below).
+
 ## Using it with other editors
 
 ### Set up the language server
