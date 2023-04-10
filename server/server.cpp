@@ -489,14 +489,22 @@ static void recvLoop(Socket& s)
 
 int entry(std::vector<std::string>&& args, bool console)
 {
-	if (args.size() > 1)
+	uint16_t port = 9170;
+
+	for (size_t i = 1; i != args.size(); ++i)
 	{
-		if (args.at(1) != "--plutoc" || args.size() <= 2)
+		if (args.at(i) == "--plutoc" && i + 1 != args.size())
 		{
-			std::cout << "Arguments: --plutoc [path]" << std::endl;
-			return 2;
+			plutoc_path = args.at(++i);
+			continue;
 		}
-		plutoc_path = args.at(2);
+		if (args.at(i) == "--port" && i + 1 != args.size())
+		{
+			port = (uint16_t)std::stoi(args.at(++i));
+			continue;
+		}
+		std::cout << "Arguments: --plutoc [path], --port [port]" << std::endl;
+		return 2;
 	}
 
 	soup::Server serv{};
@@ -521,12 +529,12 @@ int entry(std::vector<std::string>&& args, bool console)
 			recvLoop(s);
 		}
 	};
-	if (!serv.bind(9170, &srv))
+	if (!serv.bind(port, &srv))
 	{
-		std::cerr << "Failed to bind to port 9170" << std::endl;
+		std::cerr << "Failed to bind to port " << port << std::endl;
 		return 1;
 	}
-	std::cout << "Pluto Language Server is listening on port 9170." << std::endl;
+	std::cout << "Pluto Language Server is listening on port " << port << std::endl;
 	serv.run();
 	return 0;
 }
