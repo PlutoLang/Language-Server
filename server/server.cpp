@@ -429,6 +429,10 @@ static void recvLoop(Socket& s)
 						{
 							std::string& line = lines.at(position_line);
 							auto cur = position_character;
+							if (cur == 0)
+							{
+								cur = 1;
+							}
 							bool has_filter = false;
 							while (--cur, true)
 							{
