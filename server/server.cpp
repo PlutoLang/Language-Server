@@ -313,6 +313,10 @@ static void recvLoop(Socket& s)
 			if (cd.str.substr(0, 16) == "Content-Length: ")
 			{
 				auto sep = cd.str.find("\r\n\r\n", 16);
+				if (sep == std::string::npos)
+				{
+					break;
+				}
 				cd.len = std::stoull(cd.str.substr(16, sep - 16));
 				cd.str.erase(0, sep + 4);
 			}
