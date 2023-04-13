@@ -386,11 +386,8 @@ static void recvLoop(Socket& s)
 					const std::string& uri = root->asObj().at("params").asObj().at("textDocument").asObj().at("uri").asStr().value;
 					const std::string& text = root->asObj().at("params").asObj().at("textDocument").asObj().at("text").asStr().value;
 					//std::cout << uri << " opened: " << text << "\n";
-					if (cd.supports_pull_diagnostics)
-					{
-						cd.updateFileContents(uri, text);
-					}
-					else
+					cd.updateFileContents(uri, text);
+					if (!cd.supports_pull_diagnostics)
 					{
 						lintAndPublish(s, uri, text);
 					}
@@ -400,11 +397,8 @@ static void recvLoop(Socket& s)
 					const std::string& uri = root->asObj().at("params").asObj().at("textDocument").asObj().at("uri").asStr().value;
 					const std::string& text = root->asObj().at("params").asObj().at("contentChanges").asArr().at(0).asObj().at("text").asStr().value;
 					//std::cout << uri << " changed: " << text << "\n";
-					if (cd.supports_pull_diagnostics)
-					{
-						cd.updateFileContents(uri, text);
-					}
-					else
+					cd.updateFileContents(uri, text);
+					if (!cd.supports_pull_diagnostics)
 					{
 						lintAndPublish(s, uri, text);
 					}
