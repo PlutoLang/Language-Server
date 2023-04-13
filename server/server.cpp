@@ -67,26 +67,26 @@ static void sendRequest(Socket& s, const std::string& method, JsonObject&& param
 	sendWithLen(s, msg.encode());
 }
 
-static void sendResult(Socket& s, int64_t reqid)
+static void sendResult(Socket& s, UniquePtr<JsonNode>&& reqid)
 {
 	JsonObject msg;
 	msg.add("jsonrpc", "2.0");
-	msg.add("id", reqid);
+	msg.add("id", std::move(reqid));
 	sendWithLen(s, msg.encode());
 }
 
-static void sendResult(Socket& s, int64_t reqid, UniquePtr<JsonNode>&& result)
+static void sendResult(Socket& s, UniquePtr<JsonNode>&& reqid, UniquePtr<JsonNode>&& result)
 {
 	JsonObject msg;
 	msg.add("jsonrpc", "2.0");
-	msg.add("id", reqid);
+	msg.add("id", std::move(reqid));
 	msg.add(soup::make_unique<JsonString>("result"), std::move(result));
 	sendWithLen(s, msg.encode());
 }
 
-static void sendResult(Socket& s, int64_t reqid, JsonObject&& result)
+static void sendResult(Socket& s, UniquePtr<JsonNode>&& reqid, JsonObject&& result)
 {
-	sendResult(s, reqid, soup::make_unique<JsonObject>(std::move(result)));
+	sendResult(s, std::move(reqid), soup::make_unique<JsonObject>(std::move(result)));
 }
 
 // line & character start at 0!
@@ -291,12 +291,12 @@ static void lintAndPublish(Socket& s, const std::string& uri, const std::string&
 	sendRequest(s, "textDocument/publishDiagnostics", std::move(msg));
 }
 
-static void lintAndSendResult(Socket& s, int64_t reqid, const std::string& contents)
+static void lintAndSendResult(Socket& s, UniquePtr<JsonNode>&& reqid, const std::string& contents)
 {
 	JsonObject msg;
 	msg.add("kind", "full");
 	msg.add(soup::make_unique<JsonString>("items"), lint(contents));
-	sendResult(s, reqid, std::move(msg));
+	sendResult(s, std::move(reqid), std::move(msg));
 }
 
 static void recvLoop(Socket& s)
@@ -337,14 +337,18 @@ static void recvLoop(Socket& s)
 				cd.len = -1;
 
 				// Process message
-				int64_t reqid = -1;
+				UniquePtr<JsonNode> reqid;
 				if (root->asObj().contains("id"))
 				{
-					reqid = root->asObj().at("id").asInt().value;
+					reqid = std::move(*root->asObj().findUp(JsonString("id")));
+				}
+				else
+				{
+					reqid = soup::make_unique<JsonInt>(-1);
 				}
 				const std::string& method = root->asObj().at("method").asStr().value;
 
-				std::cout << "ID " << reqid << ", method " << method << "\n";
+				std::cout << "ID " << reqid->encode() << ", method " << method << "\n";
 
 				if (method == "initialize")
 				{
@@ -373,7 +377,7 @@ static void recvLoop(Socket& s)
 					JsonObject msg;
 					msg.add(soup::make_unique<JsonString>("capabilities"), std::move(caps));
 
-					sendResult(s, reqid, std::move(msg));
+					sendResult(s, std::move(reqid), std::move(msg));
 
 					//sendWithLen(s, R"({"jsonrpc":"2.0","method":"window/showMessage","params":{"type":0,"message":"[Pluto Language Server] Socket established."}})");
 				}
@@ -414,7 +418,7 @@ static void recvLoop(Socket& s)
 					const std::string& uri = root->asObj().at("params").asObj().at("textDocument").asObj().at("uri").asStr().value;
 					const std::string& contents = cd.files.at(uri);
 					//std::cout << "Diagnostic requested with contents = " << contents << "\n";
-					lintAndSendResult(s, reqid, contents);
+					lintAndSendResult(s, std::move(reqid), contents);
 				}
 				else if (method == "textDocument/completion")
 				{
@@ -471,13 +475,13 @@ static void recvLoop(Socket& s)
 							completions = std::move(resp.node);
 						}
 					}
-					sendResult(s, reqid, std::move(completions));
+					sendResult(s, std::move(reqid), std::move(completions));
 				}
 				else if (method == "shutdown")
 				{
 					// The LSP spec requires that we stop accepting requests from the client at this point,
 					// but we only care to go along with a client's shutdown/exit flow, so this is fine.
-					sendResult(s, reqid);
+					sendResult(s, std::move(reqid));
 				}
 				else if (method == "exit")
 				{
