@@ -25,6 +25,8 @@ Now you just need to run the server.
 
 Once you've got the server up & running, you'll just have to tell your LSP client to connect to localhost at port 9170.
 
+For clients that don't support or have trouble with TCP transport, you may provide them with the path to the [stdio-proxy executable](https://github.com/PlutoLang/pluto-language-server/releases/download/0.4.1/stdio-proxy.exe), which will allow the LSP client to communicate via STDIO and establishes the TCP connection on its behalf.
+
 #### Sublime Text
 
 1. If you don't already have the [sublimelsp](https://github.com/sublimelsp/LSP) package installed, open the command palette and run `Package Control: Install Package`, then select `LSP`.
