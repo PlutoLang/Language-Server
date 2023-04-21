@@ -299,6 +299,8 @@ static void lintAndSendResult(Socket& s, UniquePtr<JsonNode>&& reqid, const std:
 	sendResult(s, std::move(reqid), std::move(msg));
 }
 
+static bool honour_exit = false;
+
 static void recvLoop(Socket& s)
 {
 	s.recv([](Socket& s, std::string&& data, Capture&&)
@@ -483,6 +485,10 @@ static void recvLoop(Socket& s)
 				}
 				else if (method == "exit")
 				{
+					if (honour_exit)
+					{
+						exit(0);
+					}
 					// Client assumes that it can restart this server, so we're not actually exitting.
 					s.close();
 				}
@@ -509,7 +515,12 @@ int entry(std::vector<std::string>&& args, bool console)
 			port = (uint16_t)std::stoi(args.at(++i));
 			continue;
 		}
-		std::cout << "Arguments: --plutoc [path], --port [port]" << std::endl;
+		if (args.at(i) == "--honour-exit" || args.at(i) == "--honor-exit")
+		{
+			honour_exit = true;
+			continue;
+		}
+		std::cout << "Arguments: --plutoc [path], --port [port], --honour-exit" << std::endl;
 		return 2;
 	}
 
