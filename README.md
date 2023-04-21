@@ -37,7 +37,7 @@ For clients that don't support or have trouble with TCP transport, you may provi
     "clients": {
         "pluto-language-server": {
             "enabled": true,
-            "selector": "source.lua",
+            "selector": "source.pluto",
             "tcp_port": 9170,
             "command": ["ping"]
         }
