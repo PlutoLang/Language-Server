@@ -325,10 +325,10 @@ static void recvLoop(Socket& s)
 
 			if (cd.str.length() >= cd.len)
 			{
-				std::cout << s.peer.toString() << " - " << cd.str << std::endl;
+				std::cout << s.peer.toString() << " - " << cd.str.substr(0, cd.len) << std::endl;
 
 				// Decode
-				auto root = json::decode(cd.str);
+				auto root = json::decode(cd.str.substr(0, cd.len));
 				if (!root)
 				{
 					throw Exception("Received invalid JSON data");
