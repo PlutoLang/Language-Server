@@ -259,11 +259,24 @@ static std::string plutoc_path = "plutoc";
 			continue;
 		}
 
-		str = str.substr(str.find(".lua:") + 5); // erase file name
+		if (auto off = str.find(".lua:"); off != std::string::npos)
+		{
+			str = str.substr(off + 5);
 
-		auto sep = str.find(": ");
-		buf.line = std::stoull(str.substr(0, sep)) - 1;
-		buf.msg = str.substr(sep + 2);
+			auto sep = str.find(": ");
+			buf.line = std::stoull(str.substr(0, sep)) - 1;
+			buf.msg = str.substr(sep + 2);
+		}
+		else
+		{
+			off = str.find(".exe:");
+			SOUP_ASSERT(off != std::string::npos, "Failed to parse error");
+			str = str.substr(off + 5);
+
+			auto sep = str.find(" on line ");
+			buf.line = std::stoull(str.substr(sep + 9)) - 1;
+			buf.msg = str.substr(0, sep);
+		}
 	}
 	buf.discharge(contents, hints);
 
