@@ -273,9 +273,16 @@ static std::string plutoc_path = "plutoc";
 			SOUP_ASSERT(off != std::string::npos, "Failed to parse error");
 			str = str.substr(off + 5);
 
-			auto sep = str.find(" on line ");
-			buf.line = std::stoull(str.substr(sep + 9)) - 1;
-			buf.msg = str.substr(0, sep);
+			if (auto sep = str.find(" on line "); sep != std::string::npos)
+			{
+				buf.line = std::stoull(str.substr(sep + 9)) - 1;
+				buf.msg = str.substr(0, sep);
+			}
+			else
+			{
+				buf.line = 0;
+				buf.msg = str;
+			}
 		}
 	}
 	buf.discharge(contents, hints);
