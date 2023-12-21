@@ -3,7 +3,7 @@
   "displayName": "Pluto Language Server",
   "description": "Provides warnings, errors, and completions for Pluto, a Lua dialect.",
   "keywords": ["Pluto language"],
-  "version": "0.4.3",
+  "version": "0.5.0",
   "repository": "https://github.com/PlutoLang/pluto-language-server",
   "publisher": "calamity-inc",
   "icon": "icon.png",
